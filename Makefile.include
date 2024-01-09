@@ -1,0 +1,22 @@
+CC = avr-gcc
+CFLAGS = -w -Os -DF_CPU=$(CPU_SPEED)
+LINK = $(CC) -mmcu=$(MCU)
+COMPILE = $(CC) -mmcu=$(MCU) $(CFLAGS)
+
+SRCS := $(wildcard *.c)
+OBJS := $(SRCS:.c=.o)
+
+all: $(TARGET) hex
+
+$(TARGET): $(OBJS)
+	$(LINK) $^ -o $(TARGET).bin
+
+%.o: %.c
+	$(COMPILE) -c $^ -o $@
+hex: 
+	avr-objcopy -O ihex -R .eeprom $(TARGET).bin $(TARGET).hex
+flash: 
+	avrdude -c ttl232r -p $(MCU) -b 4800 -P usb:AM00FNSR -U flash:w:$(TARGET).hex
+
+clean:
+	$(RM) *.o *.hex *.bin *~ $(TARGET)
